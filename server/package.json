@@ -1,0 +1,37 @@
+{
+  "name": "trapezoid",
+  "type": "module",
+  "version": "1.0.0",
+  "main": "index.js",
+  "scripts": {
+    "start": "tsx src/index.ts",
+    "clean": "rimraf build",
+    "build:bundle": "esbuild src/index.js --bundle --outdir=build --format=cjs --out-extension:.js=.cjs --platform=node --loader:.node=file --public-path=Release --asset-names=Release/[name]",
+    "build:copy-node-bin": "node -e \"require('fs').copyFileSync(process.execPath, 'build/bundle.exe')\"",
+    "build:create-launcher": "node -e \"require('fs').writeFileSync('build/launch.bat', '@echo off\\nnode index.cjs')\"",
+    "build": "npm run clean && npm run build:bundle && npm run build:copy-node-bin && npm run build:create-launcher"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "description": "",
+  "dependencies": {
+    "cors": "2.8.5",
+    "express": "4.21.0",
+    "find-free-ports": "3.1.1",
+    "node-global-key-listener": "0.3.0",
+    "node-window-manager": "^2.2.4",
+    "zod": "3.23.8"
+  },
+  "devDependencies": {
+    "@types/cors": "2.8.17",
+    "@types/express": "4.17.21",
+    "@types/node": "22.5.5",
+    "@yao-pkg/pkg": "5.14.2",
+    "esbuild": "0.23.1",
+    "postject": "1.0.0-alpha.6",
+    "rimraf": "6.0.1",
+    "tsx": "4.19.1",
+    "typescript": "5.6.2"
+  }
+}
