@@ -1,5 +1,5 @@
 {
-  "name": "trapezoid",
+  "name": "@trapezoid/server",
   "type": "module",
   "version": "1.0.0",
   "main": "index.js",
@@ -16,6 +16,8 @@
   "license": "ISC",
   "description": "",
   "dependencies": {
+    "@trapezoid/common": "file:../common",
+    "common": "file:../common",
     "cors": "2.8.5",
     "express": "4.21.0",
     "find-free-ports": "3.1.1",

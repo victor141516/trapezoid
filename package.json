@@ -1,0 +1,16 @@
+{
+  "name": "trapezoid",
+  "version": "1.0.0",
+  "main": "index.js",
+  "devDependencies": {},
+  "scripts": {},
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "description": "",
+  "workspaces": [
+    "common",
+    "ui",
+    "server"
+  ]
+}

@@ -260,22 +260,3 @@ export const getShortcutActions = () => {
     bottomRightSixth: toWindowMover(bottomRightSixth),
   } as const;
 };
-
-type TempRet = keyof ReturnType<typeof getShortcutActions>;
-
-export const availableActions = Object.keys(
-  getShortcutActions()
-) as unknown as readonly [TempRet, ...TempRet[]];
-
-export const actionValidator = z.enum(availableActions);
-
-export type Action = z.output<typeof actionValidator>;
-
-export const offsetsValidator = z.object({
-  top: z.number(),
-  left: z.number(),
-  bottom: z.number(),
-  right: z.number(),
-});
-
-export type Offsets = z.output<typeof offsetsValidator>;

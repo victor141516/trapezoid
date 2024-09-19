@@ -1,119 +1,65 @@
-import { Shortcut } from "../components/ShortcutRecorder.vue";
+import { endpoints } from "@trapezoid/common/api";
+import { z } from "zod";
 
 let port: number = 8000;
 export const setApiPort = (newPort: number) => {
   port = newPort;
 };
 
-export type AvailableActions =
-  | "fullScreen"
-  | "leftOneThird"
-  | "leftTwoThirds"
-  | "rightOneThird"
-  | "rightTwoThirds"
-  | "leftHalf"
-  | "dynamicLeftHalf"
-  | "dynamicRightHalf"
-  | "rightHalf"
-  | "topLeftSixth"
-  | "topMiddleSixth"
-  | "topRightSixth"
-  | "bottomLeftSixth"
-  | "bottomMiddleSixth"
-  | "bottomRightSixth";
+const buildApiCall =
+  <
+    Endpoint extends
+      | (typeof endpoints.POST)[keyof typeof endpoints.POST]
+      | (typeof endpoints.GET)[keyof typeof endpoints.GET],
+    Body = z.input<Endpoint["body"]>
+  >(
+    endpoint: Endpoint
+  ) =>
+  (
+    body: Body extends z.ZodType ? z.input<Body> : undefined = undefined as any
+  ): Promise<
+    z.input<Endpoint["response"]> extends { ok: true; data: infer Data }
+      ? Data
+      : // TODO: fix type
+        any
+  > => {
+    return fetch(`http://localhost:${port}${endpoint.url}`, {
+      method: endpoint.verb,
+      body: endpoint.body ? JSON.stringify(body) : undefined,
+      headers: {
+        ...(endpoint.body ? { "Content-Type": "application/json" } : {}),
+      },
+    })
+      .then((r) => r.json())
+      .then((r) => endpoint.response.parse(r))
+      .then((r) => {
+        if (r.ok) {
+          return r.data as any;
+        } else {
+          throw new Error(r.error);
+        }
+      });
+  };
 
-const METHOD_NAMES = {
-  INITIALIZE: "initialize",
-  STOP: "stop",
-  OFFSETS: "offsets",
-  SHORTCUTS_ACTIONS: "shortcuts-actions",
-  AVAILABLE_ACTIONS: "available-actions",
-} as const;
-
-interface Offsets {
-  top: number;
-  left: number;
-  bottom: number;
-  right: number;
-}
-
-type Method = keyof typeof METHOD_NAMES;
-type MethodGet = Extract<
-  Method,
-  "SHORTCUTS_ACTIONS" | "AVAILABLE_ACTIONS" | "OFFSETS"
->;
-type MethodPost = Extract<
-  Method,
-  "INITIALIZE" | "STOP" | "OFFSETS" | "SHORTCUTS_ACTIONS"
->;
-
-interface ShortcutAction {
-  shortcut: Shortcut;
-  action: AvailableActions;
-}
-
-const apiCallGet = (method: MethodGet) => {
-  return fetch(`http://localhost:${port}/api/${METHOD_NAMES[method]}`, {
-    method: "GET",
-  })
-    .then((r) => r.json() as Promise<{ ok: boolean }>)
-    .then((r) => {
-      if (r.ok) {
-        return r;
-      } else {
-        throw new Error(JSON.stringify(r));
-      }
-    });
-};
-
-const apiCallPost = (method: MethodPost, body?: any) => {
-  return fetch(`http://localhost:${port}/api/${METHOD_NAMES[method]}`, {
-    method: "POST",
-    body: body ? JSON.stringify(body) : undefined,
-    headers: {
-      "Content-Type": "application/json",
-    },
-  })
-    .then((r) => r.json() as Promise<{ ok: boolean }>)
-    .then((r) => {
-      if (r.ok) {
-        return r;
-      } else {
-        throw new Error(JSON.stringify(r));
-      }
-    });
-};
-
-export const getAvailableActions = () => {
-  return apiCallGet("AVAILABLE_ACTIONS").then(({ actions }: any) => {
-    return actions as AvailableActions[];
-  });
-};
-
-export const resume = () => {
-  return apiCallPost("INITIALIZE");
-};
-
-export const pause = () => {
-  return apiCallPost("STOP");
-};
-
-export const setShortcutsActions = (shortcutsActions: ShortcutAction[]) => {
-  return apiCallPost("SHORTCUTS_ACTIONS", shortcutsActions);
-};
-
-export const getShortcutsActions = () => {
-  return apiCallGet("SHORTCUTS_ACTIONS").then(({ shortcuts }: any) => {
-    return shortcuts as ShortcutAction[];
-  });
-};
-
-export const getOffsets = () => {
-  return apiCallGet("OFFSETS").then(({ offsets }: any) => {
-    return offsets as Offsets;
-  });
-};
-
-export const setOffsets = (offsets: Offsets) => {
-  return apiCallPost("OFFSETS", offsets);
-};
+// TODO: fix types
+export const resume = buildApiCall(endpoints.POST.initialize) as (
+  param?: any
+) => Promise<any>;
+export const pause = buildApiCall(endpoints.POST.stop) as (
+  param?: any
+) => Promise<any>;
+export const setShortcutsActions = buildApiCall(
+  endpoints.POST.shortcutsActions
+) as (param?: any) => Promise<any>;
+export const setOffsets = buildApiCall(endpoints.POST.offsets) as (
+  param?: any
+) => Promise<any>;
+export const getOffsets = buildApiCall(endpoints.GET.offsets) as (
+  param?: any
+) => Promise<any>;
+export const getShortcutsActions = buildApiCall(
+  endpoints.GET.shortcutsActions
+) as (param?: any) => Promise<any>;
+export const getAvailableActions = buildApiCall(
+  endpoints.GET.availableActions
+) as (param?: any) => Promise<any>;

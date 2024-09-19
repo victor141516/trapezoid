@@ -2,8 +2,10 @@
 import { onMounted, reactive, ref, watch } from "vue";
 import ShortcutRecorder, { Shortcut } from "./components/ShortcutRecorder.vue";
 import * as api from "./libs/api";
+import { Action, Offsets } from "@trapezoid/common/window";
+import { ShortcutAction } from "@trapezoid/common/shortcuts";
 
-const fromActionListToInputValues = (actions: api.AvailableActions[]) => {
+const fromActionListToInputValues = (actions: Action[]) => {
   return actions.reduce((acc, e) => {
     return { ...acc, [e]: null };
   }, {}) as Record<(typeof availableActions.value)[number], null | Shortcut>;
@@ -11,11 +13,11 @@ const fromActionListToInputValues = (actions: api.AvailableActions[]) => {
 
 const inputEl = ref<HTMLInputElement>();
 const isEnabled = ref(false);
-const availableActions = ref<api.AvailableActions[]>([]);
+const availableActions = ref<Action[]>([]);
 const inputValues = reactive(
   fromActionListToInputValues(availableActions.value)
 );
-const offsets = reactive({
+const offsets = reactive<Offsets>({
   top: 0,
   left: 0,
   bottom: 0,
@@ -61,7 +63,7 @@ watch(
         .map(([k, v]) => {
           return {
             shortcut: v as Shortcut,
-            action: k as api.AvailableActions,
+            action: k as Action,
           };
         })
         .filter((e) => e.shortcut !== null)
@@ -87,10 +89,10 @@ onMounted(async () => {
   await api.getAvailableActions().then((actions) => {
     availableActions.value = actions;
     Object.entries(fromActionListToInputValues(actions)).forEach(([k, v]) => {
-      inputValues[k as api.AvailableActions] = v;
+      inputValues[k as Action] = v;
     });
   });
-  await api.getShortcutsActions().then((shortcutsActions) => {
+  await api.getShortcutsActions().then((shortcutsActions: ShortcutAction[]) => {
     shortcutsActions.forEach(({ action, shortcut }) => {
       inputValues[action] = shortcut;
     });

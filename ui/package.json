@@ -1,5 +1,5 @@
 {
-  "name": "trapezoid-ui",
+  "name": "@trapezoid/ui",
   "private": true,
   "version": "0.1.0",
   "type": "module",
@@ -11,6 +11,8 @@
   },
   "dependencies": {
     "@tauri-apps/api": "^1",
+    "@trapezoid/common": "file:../common",
+    "common": "file:../common",
     "vue": "^3.3.4"
   },
   "devDependencies": {

@@ -1,4 +1,4 @@
-import { ShortcutAction } from "./keyboard/types";
+import { ShortcutAction } from "@trapezoid/common/shortcuts";
 
 export const exampleShortcuts: Array<ShortcutAction> = [
   {

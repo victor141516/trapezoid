@@ -1,5 +1,5 @@
-import { actionValidator } from "@trapezoid/common/window";
 import { IGlobalKey } from "node-global-key-listener";
+import { actionValidator } from "./window";
 import { z } from "zod";
 
 export const shortcutValidator = z.object({
