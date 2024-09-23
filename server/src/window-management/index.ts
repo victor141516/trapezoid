@@ -2,7 +2,6 @@ import { windowManager, type Window } from "node-window-manager";
 import { IRectangle } from "node-window-manager/dist/interfaces";
 
 import { type getOffsets as offsetsGetter } from "../settings";
-import { z } from "zod";
 
 let getOffsets: typeof offsetsGetter = () => ({
   top: 0,
@@ -12,6 +11,49 @@ let getOffsets: typeof offsetsGetter = () => ({
 });
 export const setOffsetsGetter = (offsetsGetter: typeof getOffsets) => {
   getOffsets = offsetsGetter;
+};
+
+const isWindowShadowed = (window: Window) => {
+  const WS_EX_TOOLWINDOW = 0x00000080;
+  const WS_EX_LAYERED = 0x00080000;
+  const hasWS_EX_TOOLWINDOW =
+    (window.id & WS_EX_TOOLWINDOW) === WS_EX_TOOLWINDOW;
+  const hasWS_EX_LAYERED = (window.id & WS_EX_LAYERED) === WS_EX_LAYERED;
+  const hasShadow = hasWS_EX_TOOLWINDOW || hasWS_EX_LAYERED;
+  console.log({
+    hasWS_EX_TOOLWINDOW,
+    hasWS_EX_LAYERED,
+    hasShadow,
+  });
+  return hasShadow;
+};
+
+const getWindowShadowOffsets = (window: Window) => {
+  if (isWindowShadowed(window)) {
+    return {
+      x: -5,
+      y: 0,
+      height: 8,
+      width: 30,
+    };
+  } else {
+    return {
+      x: 0,
+      y: 0,
+      height: 0,
+      width: 0,
+    };
+  }
+};
+
+const fixBoundsForShadow = (bounds: Required<IRectangle>, window: Window) => {
+  const shadowOffsets = getWindowShadowOffsets(window);
+  return {
+    x: bounds.x + shadowOffsets.x,
+    y: bounds.y + shadowOffsets.y,
+    width: bounds.width + shadowOffsets.width,
+    height: bounds.height + shadowOffsets.height,
+  };
 };
 
 const getMonitorSizes = (window: Window) => {
@@ -26,11 +68,14 @@ const getMonitorSizes = (window: Window) => {
   ) {
     throw new Error("Could not get real resolution");
   }
+  const configuredOffsets = getOffsets!();
   return {
-    height: (height + getOffsets!().bottom) / scaleFactor,
-    width: (width + getOffsets!().right) / scaleFactor,
-    x: (x + getOffsets!().left) / scaleFactor,
-    y: (y + getOffsets!().top) / scaleFactor,
+    height:
+      (height - configuredOffsets.bottom - configuredOffsets.top) / scaleFactor,
+    width:
+      (width - configuredOffsets.right - configuredOffsets.left) / scaleFactor,
+    x: (x + configuredOffsets.left) / scaleFactor,
+    y: (y + configuredOffsets.top) / scaleFactor,
     scaleFactor,
   };
 };
@@ -61,64 +106,82 @@ const isWindowAtBounds = (window: Window, bounds: IRectangle) => {
 
 const fullScreen = (window: Window) => {
   const { height, width, x, y } = getMonitorSizes(window);
-  return {
-    x,
-    y,
-    width,
-    height,
-  };
+  return fixBoundsForShadow(
+    {
+      x,
+      y,
+      width,
+      height,
+    },
+    window
+  );
 };
 
 const leftOneThird = (window: Window) => {
   const { height, width, x, y } = getMonitorSizes(window);
-  return {
-    x,
-    y,
-    width: width / 3,
-    height,
-  };
+  return fixBoundsForShadow(
+    {
+      x,
+      y,
+      width: width / 3,
+      height,
+    },
+    window
+  );
 };
 
 const leftTwoThirds = (window: Window) => {
   const { height, width, x, y } = getMonitorSizes(window);
-  return {
-    x,
-    y,
-    width: (width / 3) * 2,
-    height,
-  };
+  return fixBoundsForShadow(
+    {
+      x,
+      y,
+      width: (width / 3) * 2,
+      height,
+    },
+    window
+  );
 };
 
 const rightOneThird = (window: Window) => {
   const { height, width, x, y } = getMonitorSizes(window);
   const newWidth = width / 3;
-  return {
-    x: x + newWidth * 2,
-    y,
-    width: width / 3,
-    height,
-  };
+  return fixBoundsForShadow(
+    {
+      x: x + newWidth * 2,
+      y,
+      width: width / 3,
+      height,
+    },
+    window
+  );
 };
 
 const rightTwoThirds = (window: Window) => {
   const { height, width, x, y } = getMonitorSizes(window);
   const newWidth = width / 3;
-  return {
-    x: x + newWidth,
-    y,
-    width: (width / 3) * 2,
-    height,
-  };
+  return fixBoundsForShadow(
+    {
+      x: x + newWidth,
+      y,
+      width: (width / 3) * 2,
+      height,
+    },
+    window
+  );
 };
 
 const leftHalf = (window: Window) => {
   const { height, width, x, y } = getMonitorSizes(window);
-  return {
-    x,
-    y,
-    width: width / 2,
-    height,
-  };
+  return fixBoundsForShadow(
+    {
+      x,
+      y,
+      width: width / 2,
+      height,
+    },
+    window
+  );
 };
 
 const dynamicLeftHalf = (window: Window) => {
@@ -155,89 +218,110 @@ const dynamicRightHalf = (window: Window) => {
 
 const rightHalf = (window: Window) => {
   const { height, width, x, y } = getMonitorSizes(window);
-  return {
-    x: x + width / 2,
-    y,
-    width: width / 2,
-    height,
-  };
+  return fixBoundsForShadow(
+    {
+      x: x + width / 2,
+      y,
+      width: width / 2,
+      height,
+    },
+    window
+  );
 };
 
 const topLeftSixth = (window: Window) => {
   const { height, width, x, y } = getMonitorSizes(window);
-  return {
-    x,
-    y,
-    width: width / 3,
-    height: height / 2,
-  };
+  return fixBoundsForShadow(
+    {
+      x,
+      y,
+      width: width / 3,
+      height: height / 2,
+    },
+    window
+  );
 };
 
 const topMiddleSixth = (window: Window) => {
   const { height, width, x, y } = getMonitorSizes(window);
   const newWidth = width / 3;
-  return {
-    x: x + newWidth,
-    y,
-    width: newWidth,
-    height: height / 2,
-  };
+  return fixBoundsForShadow(
+    {
+      x: x + newWidth,
+      y,
+      width: newWidth,
+      height: height / 2,
+    },
+    window
+  );
 };
 
 const topRightSixth = (window: Window) => {
   const { height, width, x, y } = getMonitorSizes(window);
   const newWidth = width / 3;
-  return {
-    x: x + newWidth * 2,
-    y,
-    width: newWidth,
-    height: height / 2,
-  };
+  return fixBoundsForShadow(
+    {
+      x: x + newWidth * 2,
+      y,
+      width: newWidth,
+      height: height / 2,
+    },
+    window
+  );
 };
 
 const bottomLeftSixth = (window: Window) => {
   const { height, width, x, y } = getMonitorSizes(window);
   const newHeight = height / 2;
-  return {
-    x,
-    y: y + newHeight,
-    width: width / 3,
-    height: newHeight,
-  };
+  return fixBoundsForShadow(
+    {
+      x,
+      y: y + newHeight,
+      width: width / 3,
+      height: newHeight,
+    },
+    window
+  );
 };
 
 const bottomMiddleSixth = (window: Window) => {
   const { height, width, x, y } = getMonitorSizes(window);
   const newWidth = width / 3;
   const newHeight = height / 2;
-  return {
-    x: x + newWidth,
-    y: y + newHeight,
-    width: newWidth,
-    height: newHeight,
-  };
+  return fixBoundsForShadow(
+    {
+      x: x + newWidth,
+      y: y + newHeight,
+      width: newWidth,
+      height: newHeight,
+    },
+    window
+  );
 };
 
 const bottomRightSixth = (window: Window) => {
   const { height, width, x, y } = getMonitorSizes(window);
   const newWidth = width / 3;
   const newHeight = height / 2;
-  return {
-    x: x + newWidth * 2,
-    y: y + newHeight,
-    width: newWidth,
-    height: newHeight,
-  };
+  return fixBoundsForShadow(
+    {
+      x: x + newWidth * 2,
+      y: y + newHeight,
+      width: newWidth,
+      height: newHeight,
+    },
+    window
+  );
 };
 
 export const setWindow = (window: Window, bounds: IRectangle) => {
   window.setBounds(bounds);
 };
 
-const toWindowMover = (bounsGetter: (window: Window) => IRectangle) => {
+const toWindowMover = (boundsGetter: (window: Window) => IRectangle) => {
   return () => {
     const window = windowManager.getActiveWindow();
-    window.setBounds(bounsGetter(window));
+    window.setBounds(boundsGetter(window));
   };
 };
 

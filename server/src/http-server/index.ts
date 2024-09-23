@@ -41,9 +41,9 @@ const useEndpoint = <
 useEndpoint(app, endpoints.POST.initialize, (req, res) => {
   settings.setOffsets({
     top: -1,
-    left: -5,
-    bottom: -42,
-    right: 7,
+    left: 0,
+    bottom: 50,
+    right: 20,
   });
   settings.setConfiguredShortcuts(exampleShortcuts);
 
@@ -94,9 +94,9 @@ useEndpoint(app, endpoints.GET.offsets, (req, res) => {
   res.json({ ok: true, data: settings.getOffsets() });
 });
 
-export const port = findFreePorts(1, { startPort: 8000 }).then(
-  (ports) => ports[0]
-);
+export const port =
+  8000 || findFreePorts(1, { startPort: 8000 }).then((ports) => ports[0]);
+
 export const start = async () => {
   app.listen(await port, "127.0.0.1", async () => {
     console.log("Trapezoid server started on port:", await port);
