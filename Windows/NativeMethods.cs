@@ -7,6 +7,9 @@ internal static class NativeMethods
     public const int SwRestore = 9;
     public const uint SwpNoZOrder = 0x0004;
     public const uint SwpShowWindow = 0x0040;
+    public const int DwmwaExtendedFrameBounds = 9;
+    public const int DwmwaWindowCornerPreference = 33;
+    public const int DwmwcpDoNotRound = 1;
     private const int GaRoot = 2;
 
     [DllImport("user32.dll", SetLastError = true)]
@@ -49,6 +52,20 @@ internal static class NativeMethods
     [DllImport("user32.dll", SetLastError = true)]
     public static extern bool GetWindowRect(IntPtr hWnd, out NativeRect lpRect);
 
+    [DllImport("dwmapi.dll")]
+    public static extern int DwmGetWindowAttribute(
+        IntPtr hWnd,
+        int dwAttribute,
+        out NativeRect pvAttribute,
+        int cbAttribute);
+
+    [DllImport("dwmapi.dll")]
+    public static extern int DwmSetWindowAttribute(
+        IntPtr hWnd,
+        int dwAttribute,
+        ref int pvAttribute,
+        int cbAttribute);
+
     [DllImport("user32.dll")]
     public static extern uint GetWindowThreadProcessId(IntPtr hWnd, out uint processId);
 
@@ -66,6 +83,37 @@ internal static class NativeMethods
     public static bool IsKeyDown(Keys key)
     {
         return (GetKeyState((int)key) & 0x8000) != 0;
+    }
+
+    public static bool GetVisibleWindowRect(IntPtr hWnd, out NativeRect rect)
+    {
+        var result = DwmGetWindowAttribute(
+            hWnd,
+            DwmwaExtendedFrameBounds,
+            out rect,
+            Marshal.SizeOf<NativeRect>());
+
+        if (result == 0 && rect.Right > rect.Left && rect.Bottom > rect.Top)
+        {
+            return true;
+        }
+
+        return GetWindowRect(hWnd, out rect);
+    }
+
+    public static void DisableRoundedCorners(IntPtr hWnd)
+    {
+        if (!OperatingSystem.IsWindowsVersionAtLeast(10, 0, 22000))
+        {
+            return;
+        }
+
+        var preference = DwmwcpDoNotRound;
+        _ = DwmSetWindowAttribute(
+            hWnd,
+            DwmwaWindowCornerPreference,
+            ref preference,
+            sizeof(int));
     }
 }
 
