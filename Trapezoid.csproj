@@ -9,5 +9,6 @@
     <ApplicationIcon>Assets\Trapezoid.ico</ApplicationIcon>
     <AssemblyName>Trapezoid</AssemblyName>
     <RootNamespace>Trapezoid</RootNamespace>
+    <Version>1.1.0</Version>
   </PropertyGroup>
 </Project>
