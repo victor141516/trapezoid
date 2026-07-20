@@ -147,6 +147,8 @@ internal static class WindowLayoutCalculator
             WindowActionId.FirstThreeFourths => OrientationStrip(work, CycleIndex(0, 2, repeatedExecutionCount), 3, 4),
             WindowActionId.CenterThreeFourths => OrientationStrip(work, 0.5, 3, 4),
             WindowActionId.LastThreeFourths => OrientationStrip(work, CycleIndex(1, 2, repeatedExecutionCount), 3, 4),
+            WindowActionId.TopCenterSixth or WindowActionId.BottomCenterSixth
+                => CenterSixth(action, work, repeatedExecutionCount),
             _ => TryGridCycle(action, work, repeatedExecutionCount, out var cycled)
                 ? cycled
                 : PortionFromDefinition(action, work)
@@ -158,6 +160,17 @@ internal static class WindowLayoutCalculator
         }
 
         return ApplyGap(action, target, work, settings.GapSize);
+    }
+
+    private static Rectangle CenterSixth(WindowActionId action, Rectangle work, int repeatCount)
+    {
+        var center = PortionFromDefinition(action, work);
+        return CycleIndex(0, 3, repeatCount) switch
+        {
+            1 => Rectangle.FromLTRB(center.Left, center.Top, work.Right, center.Bottom),
+            2 => Rectangle.FromLTRB(work.Left, center.Top, center.Right, center.Bottom),
+            _ => center
+        };
     }
 
     private static bool TryGridCycle(WindowActionId action, Rectangle work, int repeatCount, out Rectangle target)
