@@ -9,6 +9,13 @@
     <ApplicationIcon>Assets\Trapezoid.ico</ApplicationIcon>
     <AssemblyName>Trapezoid</AssemblyName>
     <RootNamespace>Trapezoid</RootNamespace>
-    <Version>1.2.0</Version>
+    <Version>1.3.0</Version>
+    <PublishSingleFile>true</PublishSingleFile>
+    <SelfContained>true</SelfContained>
+    <RuntimeIdentifier>win-x64</RuntimeIdentifier>
+    <IncludeNativeLibrariesForSelfExtract>true</IncludeNativeLibrariesForSelfExtract>
+    <EnableCompressionInSingleFile>true</EnableCompressionInSingleFile>
+    <DebugType>none</DebugType>
+    <DebugSymbols>false</DebugSymbols>
   </PropertyGroup>
 </Project>

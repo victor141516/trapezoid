@@ -9,8 +9,10 @@ internal sealed class TrapezoidApplicationContext : ApplicationContext
     private readonly ToolStripMenuItem _enabledMenuItem;
     private MainForm? _mainForm;
     private bool _exiting;
+    private readonly System.Windows.Forms.Timer _showTimer;
+    private readonly EventWaitHandle _showEvent;
 
-    public TrapezoidApplicationContext()
+    public TrapezoidApplicationContext(bool background = false)
     {
         _windowManager = new WindowManager();
         _hotkeyService = new HotkeyService(action => _windowManager.Execute(action, _settingsStore.Settings));
@@ -38,7 +40,11 @@ internal sealed class TrapezoidApplicationContext : ApplicationContext
         _notifyIcon.DoubleClick += (_, _) => ShowMainForm();
 
         RefreshHotkeys();
-        ShowMainForm();
+        _showEvent = new EventWaitHandle(false, EventResetMode.AutoReset, @"Local\Trapezoid.WindowManager.Show");
+        _showTimer = new System.Windows.Forms.Timer { Interval = 200 };
+        _showTimer.Tick += (_, _) => { if (_showEvent.WaitOne(0)) ShowMainForm(); };
+        _showTimer.Start();
+        if (!background) ShowMainForm();
     }
 
     private ContextMenuStrip BuildTrayMenu()
@@ -106,6 +112,8 @@ internal sealed class TrapezoidApplicationContext : ApplicationContext
         {
             _notifyIcon.Dispose();
             _hotkeyService.Dispose();
+            _showTimer.Dispose();
+            _showEvent.Dispose();
         }
 
         base.Dispose(disposing);
