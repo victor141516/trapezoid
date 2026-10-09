@@ -16,11 +16,15 @@ internal static class StartupRegistration
 
     public static bool IsEnabled()
     {
+        if (IsManaged) return false;
         return File.Exists(ShortcutPath);
     }
 
+    public static bool IsManaged => Environment.GetEnvironmentVariable("WINKIT_MANAGED") == "1";
+
     public static void SetEnabled(bool enabled)
     {
+        if (IsManaged && enabled) return;
         RemoveLegacyRegistryStartup();
 
         if (enabled)
@@ -52,6 +56,7 @@ internal static class StartupRegistration
         {
             var executablePath = Application.ExecutablePath;
             shellLink.SetPath(executablePath);
+            shellLink.SetArguments("--background");
             shellLink.SetWorkingDirectory(Path.GetDirectoryName(executablePath) ?? AppContext.BaseDirectory);
             shellLink.SetDescription("Start Trapezoid at login");
             shellLink.SetIconLocation(executablePath, 0);

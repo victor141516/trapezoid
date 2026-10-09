@@ -276,7 +276,12 @@ internal sealed class MainForm : Form
         table.Controls.Add(_enabledCheckbox, 0, 0);
         table.SetColumnSpan(_enabledCheckbox, 2);
 
-        _launchAtLoginCheckbox = new CheckBox { Text = "Launch at login", AutoSize = true };
+        _launchAtLoginCheckbox = new CheckBox
+        {
+            Text = StartupRegistration.IsManaged ? "Launch at login (managed by WinKit)" : "Launch at login",
+            AutoSize = true,
+            Enabled = !StartupRegistration.IsManaged
+        };
         _launchAtLoginCheckbox.CheckedChanged += (_, _) =>
         {
             StartupRegistration.SetEnabled(_launchAtLoginCheckbox.Checked);
